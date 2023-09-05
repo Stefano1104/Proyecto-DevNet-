@@ -1,0 +1,83 @@
+import urllib.parse
+import requests
+from tabulate import tabulate
+# Definimos colores, primer plano
+PNegro='\033[30m'		# 1
+PRojo='\033[31m'		# 2
+PVerde='\033[32m'		# 3
+PNaranja='\033[33m'	# 4
+PAzul='\033[34m'		# 5
+PMagenta='\033[35m'	# 6
+PCian='\033[36m'		# 7
+PGris='\033[37m'		# 8
+PBlanco='\e[37m'		# 9
+NC='\033[39m'
+# Colores de fondo, video inverso o segundo plano
+IGris='\033[100m'		# 8 Gris oscuro
+IRojo='\033[101m'		# 7 Luz roja
+IVerde='\033[102m'		# 6 Verde claro
+IAmarillo='\033[103m'	# 5 Amarillo
+IAzul='\033[104m'		# 4 Azul claro
+IMagenta='\033[105m'	# 3 Morado claro
+ICian='\033[106m'		# 2 Verde azulado
+IBlanco='\033[107m'	# 1 Blanco
+INC='\033[40m'
+
+head = ["Origen"]
+head1 = ["Destino"]
+head2 = ["Duracion del viaje "]
+head3 = ["Kilometros"]
+head4 = ["Millas"]
+main_api = "https://www.mapquestapi.com/directions/v2/route?"
+
+key = "z9Z8LS47bY8jNv0HnFmQbNtVIoH1jBJV" #Replace with your MapQuest key
+
+while True:
+    orig = input(PNaranja + "Lugar de inicio:")
+    if orig == "quit" or orig == "q":
+        break
+    dest = input(PVerde + "Destino: ")
+    if dest == "quit" or dest == "q":
+        break
+    metrica = input (PGris + "Unidades en metrica o ingles: ")
+    if dest == "quit" or dest == "q":
+        break
+    url = main_api + urllib.parse.urlencode({"key":key, "from":orig, "to":dest}) 
+    json_data = requests.get(url).json()
+    print(PCian + "URL: " + (url))
+    json_data = requests.get(url).json()
+    json_status = json_data["info"]["statuscode"]
+    if json_status == 0:
+        print("API Status: " + str(json_status) + " = A successful route call.\n")
+        print(PRojo + "=============================================")
+        mydata = [[orig]]
+        print(PCian + tabulate(mydata, headers=head, tablefmt="fancy_grid"))
+        mydata2 = [[dest]]
+        print(PCian + tabulate(mydata2, headers=head1, tablefmt="fancy_grid"))
+        mydata3 = [[(json_data["route"]["formattedTime"])]]
+        print(PMagenta + tabulate( mydata3, headers=head2, tablefmt="grid"))
+        mydata4 = [[str("{:.2f}".format((json_data["route"]["distance"])*1.61))]]
+        mydata5 = [[str("{:.2f}".format((json_data["route"]["distance"])))]]
+        if metrica == 'metrica':
+            print(PMagenta + tabulate( mydata4, headers=head3, tablefmt="grid"))
+        elif metrica == 'ingles':
+            print(PMagenta + tabulate( mydata5, headers=head4, tablefmt="grid"))
+        else:
+            print(PVerde + 'Sistema de unidades ingresado invalido')       
+        print(PRojo + "=============================================")
+        for each in json_data["route"]["legs"][0]["maneuvers"]:
+            print(PAzul + (each["narrative"]) + " (" + str("{:.2f}".format((each["distance"])*1.61) + " km)"))
+        print(PRojo + "=============================================\n")
+    elif json_status == 402:
+        print("**********************************************")
+        print("Status Code: " + str(json_status) + "; Entradas de usuario no válidas para una o ambas ubicaciones.")
+        print("**********************************************\n")
+    elif json_status == 611:
+        print("**********************************************")
+        print("Status Code: " + str(json_status) + "; Falta una entrada para una o ambas ubicaciones.")
+        print("**********************************************\n")
+    else:
+        print("************************************************************************")
+        print("For Staus Code: " + str(json_status) + "; Refer to:")
+        print("https://developer.mapquest.com/documentation/directions-api/status-codes")
+        print("************************************************************************\n")
