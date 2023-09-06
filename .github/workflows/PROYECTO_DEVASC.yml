@@ -1,4 +1,4 @@
-import urllib.parse
+
 import requests
 from tabulate import tabulate
 # Definimos colores, primer plano
